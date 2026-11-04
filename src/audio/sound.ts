@@ -1,3 +1,4 @@
+export type BuiltInTrack = 'overdrive' | 'rush';
 // All audio is synthesized at runtime with the Web Audio API — no copyrighted music or samples.
 
 type Sfx = 'coin' | 'rare' | 'crystal' | 'dash' | 'hit' | 'damage' | 'levelup' | 'victory' | 'gameover' | 'boost' | 'jump' | 'click' | 'countdown' | 'go';
@@ -13,6 +14,7 @@ class SoundEngine {
   private step = 0;
   private nextTime = 0;
   private intensity = 0; // 0 = menu, 1 = in-game
+  private track: BuiltInTrack = 'overdrive';
   // Optional player-supplied soundtrack (a local file; never uploaded).
   private customEl: HTMLAudioElement | null = null;
   private customNode: MediaElementAudioSourceNode | null = null;
@@ -84,6 +86,14 @@ class SoundEngine {
   }
   setIntensity(v: number) { this.intensity = v; }
 
+  /** Pick which built-in track plays (ignored while a custom song file is active). */
+  setTrack(t: BuiltInTrack) {
+    if (t === this.track) return;
+    this.track = t;
+    this.step = 0;
+    if (this.ctx) this.nextTime = this.ctx.currentTime + 0.05;
+  }
+
   private startMusic() {
     const ctx = this.ctx;
     if (!ctx) return;
@@ -109,6 +119,102 @@ class SoundEngine {
   // a bamboo-flute hook and taiko fills. Menu runs at 128 BPM, in-game at 150 BPM
   // with extra layers. Fully synthesized, no samples.
   private schedule() {
+    if (this.track === 'overdrive') this.scheduleOverdrive();
+    else this.scheduleRush();
+  }
+
+  // "Overdrive": original high-energy electronic track in F minor (Fm - Db - Ab - Eb).
+  // Punchy kicks, sliding 808 bass, layered claps, rolling hats, detuned synth stabs,
+  // a bell lead and a noise riser into each loop. 140 BPM in menus, 160 BPM in-game.
+  private scheduleOverdrive() {
+    const ctx = this.ctx!;
+    const game = this.intensity > 0.5;
+    const bpm = game ? 160 : 140;
+    const six = 60 / bpm / 4;
+    const chords = [[65, 68, 72], [61, 65, 68], [68, 72, 75], [63, 67, 70]]; // Fm, Db, Ab, Eb
+    const bass = [41, 37, 44, 39];
+    // bell lead per bar: [step, midi, length]
+    const lead: [number, number, number][][] = [
+      [[0, 84, 2], [2, 84, 1], [3, 82, 1], [4, 80, 2], [6, 77, 2], [8, 80, 1], [9, 82, 1], [10, 84, 2], [12, 87, 4]],
+      [[0, 85, 2], [2, 84, 2], [4, 80, 2], [6, 77, 2], [8, 80, 2], [10, 82, 2], [12, 80, 4]],
+      [[0, 84, 1], [1, 84, 1], [2, 87, 2], [4, 84, 2], [6, 80, 2], [8, 82, 3], [11, 84, 1], [12, 82, 4]],
+      [[0, 82, 2], [2, 80, 2], [4, 82, 2], [6, 84, 2], [8, 87, 2], [10, 89, 2], [12, 84, 4]],
+    ];
+    while (this.nextTime < ctx.currentTime + 0.25) {
+      const s = this.step % 64;
+      const bar = Math.floor(s / 16);
+      const pos = s % 16;
+      const t = this.nextTime;
+      const phrase = Math.floor(this.step / 64) % 2; // 0 = groove, 1 = full with lead
+
+      // kick: 4 on the floor plus a syncopated push
+      if (pos % 4 === 0 || (game && pos === 6) || pos === 14) this.kick(t, pos % 4 === 0 ? 0.55 : 0.35);
+      // layered clap/snare on 2 and 4
+      if (pos === 4 || pos === 12) this.snare(t, 0.26);
+      // hats: 16ths, with 32nd-note rolls at the end of bars 2 and 4
+      if (bar % 2 === 1 && pos >= 12) {
+        this.hat(t, 0.03); this.hat(t + six / 2, 0.025);
+      } else this.hat(t, pos % 2 ? 0.035 : 0.02, pos % 4 === 2);
+
+      // sliding 808 bass
+      if (pos === 0 || pos === 7 || pos === 10) {
+        const n = bass[bar] + (pos === 10 ? 12 : 0);
+        this.bass808(n, t, six * (pos === 0 ? 6 : 3), pos === 10 ? bass[bar] + 7 : undefined);
+      }
+      // detuned supersaw stabs on the off-beats
+      if (pos % 4 === 2 || (game && pos === 15)) this.stab(chords[bar], t, six * 1.4, game ? 0.03 : 0.025);
+      // bell lead
+      if (game || phrase === 1) {
+        for (const [st, n, len] of lead[bar]) if (st === pos) this.bell(n, t, six * len, 0.05);
+      }
+      // white-noise riser into the next loop
+      if (bar === 3 && pos === 8) this.noise(t, six * 8, 0.09, 600, this.musicGain, 9000);
+      this.nextTime += six;
+      this.step++;
+    }
+  }
+
+  private snare(t: number, vol: number) {
+    this.clap(t, vol);
+    this.tone(55, t, 0.12, 'triangle', vol * 0.8, this.musicGain, 1800, 48); // body
+  }
+
+  private hat(t: number, vol: number, open = false) {
+    this.noise(t, open ? 0.12 : 0.035, vol, 9000);
+  }
+
+  /** 808-style bass: sine + soft-clipped harmonics, optional glide from another note. */
+  private bass808(midi: number, t: number, dur: number, from?: number) {
+    const ctx = this.ctx!;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) { const x = (i / 128) - 1; curve[i] = Math.tanh(x * 2.5); }
+    shaper.curve = curve;
+    o.type = 'sine';
+    o.frequency.setValueAtTime(this.freq(from ?? midi), t);
+    if (from !== undefined) o.frequency.exponentialRampToValueAtTime(this.freq(midi), t + 0.09);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.32, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(shaper).connect(g).connect(this.musicGain);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+  }
+
+  /** Three detuned saws per chord note, short and bright. */
+  private stab(notes: number[], t: number, dur: number, vol: number) {
+    for (const n of notes) for (const d of [-0.12, 0, 0.12]) this.tone(n + d, t, dur, 'sawtooth', vol, this.musicGain, 3200);
+  }
+
+  /** Bell lead: sine + inharmonic partial with a quick decay. */
+  private bell(midi: number, t: number, dur: number, vol: number) {
+    this.tone(midi, t, Math.max(0.18, dur), 'square', vol * 0.7, this.musicGain, 4200);
+    this.tone(midi + 19, t, 0.15, 'sine', vol * 0.5, this.musicGain, 6000);
+  }
+
+  private scheduleRush() {
     const ctx = this.ctx!;
     const game = this.intensity > 0.5;
     const bpm = game ? 150 : 128;

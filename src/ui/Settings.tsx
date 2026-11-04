@@ -18,8 +18,12 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
   );
 }
 
+const TRACKS = [{ id: 'overdrive', name: 'Overdrive' }, { id: 'rush', name: 'Degen Rush' }] as const;
+
 function Soundtrack() {
   const { name, error } = useCustomTrack();
+  const track = usePlayer((x) => x.settings.track ?? 'overdrive');
+  const set = usePlayer((x) => x.setSettings);
   return (
     <div className="py-1.5">
       <div className="flex items-center justify-between gap-3">
@@ -42,8 +46,21 @@ function Soundtrack() {
         </div>
       </div>
       <div className="mt-0.5 truncate text-[11px] text-white/45">
-        {name ? <>Playing your file: <span className="text-neon-green">{name}</span></> : 'Built-in track: Degen Rush'}
+        {name ? <>Playing your file: <span className="text-neon-green">{name}</span></> : `Built-in track: ${TRACKS.find((t) => t.id === track)?.name}`}
       </div>
+      {!name && (
+        <div className="mt-1 flex w-fit overflow-hidden rounded-md border border-white/20">
+          {TRACKS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => { set({ track: t.id }); sound.play('click'); }}
+              className={`px-2.5 py-1 font-display text-[10px] tracking-widest ${track === t.id ? 'bg-neon-purple text-white' : 'text-white/60 hover:bg-white/10'}`}
+            >
+              {t.name.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
       {error && <div className="text-[11px] text-rose-300">{error}</div>}
       <div className="text-[10px] text-white/30">Your file plays from this device only. It isn't uploaded.</div>
     </div>

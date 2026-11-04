@@ -23,6 +23,7 @@ export default function App() {
   useEffect(() => { rollPeriods(); }, [rollPeriods]);
   useEffect(() => { restoreCustomTrack(); }, []);
   useEffect(() => { sound.setMusic(settings.music); sound.setSfx(settings.sfx); }, [settings.music, settings.sfx]);
+  useEffect(() => { sound.setTrack(settings.track ?? 'overdrive'); }, [settings.track]);
   useEffect(() => { document.documentElement.classList.toggle('reduce-motion', settings.reducedMotion); }, [settings.reducedMotion]);
 
   // Level-up celebration (shown when back on the dashboard, or immediately if already there)

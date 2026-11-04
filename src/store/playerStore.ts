@@ -6,6 +6,7 @@ import { MISSIONS, dayKey, weekKey, type Stat } from '../data/missions';
 import { ACHIEVEMENTS } from '../data/achievements';
 import type { RoundAward, RoundStats } from '../lib/rules';
 import type { MapId } from '../data/maps';
+import type { BuiltInTrack } from '../audio/sound';
 
 export type Quality = 'low' | 'medium' | 'high';
 
@@ -41,7 +42,7 @@ interface PlayerState {
   owned: { characters: CharacterId[]; skins: string[]; trails: string[] };
   equipped: { character: CharacterId; skin: string; trail: string };
   map: MapId;
-  settings: { music: boolean; sfx: boolean; quality: Quality; reducedMotion: boolean };
+  settings: { music: boolean; sfx: boolean; quality: Quality; reducedMotion: boolean; track?: BuiltInTrack };
   createdAt: number;
 
   setUsername: (name: string) => void;
@@ -76,7 +77,7 @@ const defaults = () => ({
   equipped: { character: 'rookie' as CharacterId, skin: 'default', trail: 'violet' },
   map: 'station' as MapId,
   settings: {
-    music: true, sfx: true,
+    music: true, sfx: true, track: 'overdrive' as BuiltInTrack,
     quality: (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches ? 'low' : 'medium') as Quality,
     reducedMotion: typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
   },
