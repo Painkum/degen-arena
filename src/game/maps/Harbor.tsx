@@ -55,9 +55,10 @@ function Dock() {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[ARENA_R + 0.4, 96]} />
-        <meshStandardMaterial map={tex} roughness={0.5} metalness={0.4} />
+        <meshStandardMaterial map={tex} roughness={0.5} metalness={0.4} polygonOffset polygonOffsetFactor={-1} />
       </mesh>
-      <mesh position={[0, -0.6, 0]}>
+      {/* base sits 5cm under the deck so the two surfaces never overlap */}
+      <mesh position={[0, -0.66, 0]}>
         <cylinderGeometry args={[ARENA_R + 0.6, ARENA_R + 1.2, 1.2, 64]} />
         <meshStandardMaterial color={BEIGE} roughness={0.6} />
       </mesh>
@@ -66,9 +67,9 @@ function Dock() {
         <meshStandardMaterial color={CYAN} emissive={CYAN} emissiveIntensity={1.4} toneMapped={false} />
       </mesh>
       {/* glowing ring of light on the sea around the dock */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.3, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.15, 0]} renderOrder={1}>
         <ringGeometry args={[ARENA_R + 1.2, ARENA_R + 3.5, 64]} />
-        <meshBasicMaterial color={PINK} transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial color={PINK} transparent opacity={0.25} blending={THREE.AdditiveBlending} depthWrite={false} polygonOffset polygonOffsetFactor={-2} />
       </mesh>
     </group>
   );

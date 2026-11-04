@@ -11,7 +11,7 @@ function make(key: string, w: number, h: number, draw: (g: CanvasRenderingContex
   draw(c.getContext('2d')!);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
+  t.anisotropy = 8;
   cache.set(key, t);
   return t;
 }
@@ -310,7 +310,7 @@ export function harborTexture() {
     const C = 512;
     g.fillStyle = '#2b2d3d';
     g.fillRect(0, 0, 1024, 1024);
-    const s = 34;
+    const s = 52;
     for (let y = 0; y < 1024 + s; y += s * 1.5) {
       for (let x = 0; x < 1024 + s; x += s * Math.sqrt(3)) {
         const ox = (Math.round(y / (s * 1.5)) % 2) * (s * Math.sqrt(3)) / 2;

@@ -22,7 +22,7 @@ function Ground() {
         <meshStandardMaterial map={tex} roughness={0.9} />
       </mesh>
       {/* grassy lip + rocky underside */}
-      <mesh position={[0, -0.25, 0]}>
+      <mesh position={[0, -0.36, 0]}>
         <cylinderGeometry args={[ARENA_R + 0.9, ARENA_R + 0.5, 0.6, 14]} />
         <meshStandardMaterial color="#3f8f3a" roughness={0.9} flatShading />
       </mesh>
