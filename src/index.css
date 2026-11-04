@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: #05030c;
+  color: #f1edff;
+  font-family: Rajdhani, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(124, 58, 237, 0.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(57, 255, 136, 0.08), transparent 60%),
+    #05030c;
+}
+
+@layer components {
+  /* Purple glass card with a gradient hairline border */
+  .panel {
+    @apply relative rounded-2xl backdrop-blur-md;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(160deg, rgba(42, 22, 78, 0.78), rgba(14, 9, 30, 0.88) 55%, rgba(10, 7, 22, 0.92)) padding-box,
+      linear-gradient(140deg, rgba(192, 132, 252, 0.6), rgba(124, 58, 237, 0.12) 40%, rgba(57, 255, 136, 0.25)) border-box;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .panel-glow {
+    @apply panel;
+    background:
+      radial-gradient(120% 90% at 85% 10%, rgba(168, 85, 247, 0.35), transparent 60%) padding-box,
+      linear-gradient(160deg, rgba(58, 26, 110, 0.85), rgba(16, 9, 34, 0.92) 60%) padding-box,
+      linear-gradient(140deg, #c084fc, rgba(124, 58, 237, 0.2) 45%, #39ff88) border-box;
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.3), 0 14px 40px rgba(0, 0, 0, 0.55);
+  }
+  /* HUD-style corner brackets */
+  .brackets::before,
+  .brackets::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    border-color: #39ff88;
+    opacity: 0.8;
+  }
+  .brackets::before { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; border-top-left-radius: 6px; }
+  .brackets::after { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; border-bottom-right-radius: 6px; }
+  /* Selectable tile (characters, maps) with gold frame when selected */
+  .char-tile {
+    @apply relative overflow-hidden rounded-xl transition duration-200;
+    border: 2px solid rgba(168, 85, 247, 0.25);
+    background: linear-gradient(180deg, #1a1030, #0b0716);
+  }
+  .char-tile:hover { border-color: rgba(192, 132, 252, 0.7); transform: translateY(-2px); }
+  .char-tile.selected {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 1px #fbbf24, 0 0 26px rgba(251, 191, 36, 0.45);
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center rounded-lg px-6 py-3 font-display text-sm font-black tracking-[0.2em] text-black transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+    background: linear-gradient(180deg, #fde68a, #f59e0b);
+    box-shadow: 0 0 22px rgba(251, 191, 36, 0.5);
+  }
+  .ring-stat {
+    @apply relative grid place-items-center rounded-full;
+  }
+  .hud-panel {
+    @apply rounded-lg border border-neon-purple/40 bg-black/45 backdrop-blur-md;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.25), inset 0 0 12px rgba(168, 85, 247, 0.08);
+  }
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center rounded-lg px-6 py-3 font-display text-sm font-bold tracking-[0.2em] text-black transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+    background: linear-gradient(100deg, #39ff88, #a7f3d0 50%, #39ff88);
+    box-shadow: 0 0 22px rgba(57, 255, 136, 0.45);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 34px rgba(57, 255, 136, 0.7);
+  }
+  .btn-purple {
+    @apply relative inline-flex items-center justify-center rounded-lg bg-neon-violet px-5 py-2.5 font-display text-xs font-bold tracking-[0.18em] text-white transition hover:bg-neon-purple active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.45);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/5 px-5 py-3 font-display text-xs font-bold tracking-[0.18em] text-white/90 transition hover:border-neon-purple hover:bg-neon-purple/10 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest;
+  }
+  .section-title {
+    @apply font-display text-xl font-black tracking-[0.15em] text-white sm:text-2xl;
+  }
+}
+
+.confetti {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0.6; }
+}
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.35); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
