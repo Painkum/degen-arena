@@ -5,6 +5,7 @@ import { Toasts } from './ui/Toasts';
 import { usePlayer, useToasts } from './store/playerStore';
 import { levelFromXp, LEVEL_REWARDS } from './data/levels';
 import { sound } from './audio/sound';
+import { restoreCustomTrack } from './audio/customTrack';
 
 // The game bundle (three.js scene) loads only when needed.
 const GameScreen = lazy(() => import('./game/GameScreen').then((m) => ({ default: m.GameScreen })));
@@ -20,6 +21,7 @@ export default function App() {
   const [levelUp, setLevelUp] = useState<number | null>(null);
 
   useEffect(() => { rollPeriods(); }, [rollPeriods]);
+  useEffect(() => { restoreCustomTrack(); }, []);
   useEffect(() => { sound.setMusic(settings.music); sound.setSfx(settings.sfx); }, [settings.music, settings.sfx]);
   useEffect(() => { document.documentElement.classList.toggle('reduce-motion', settings.reducedMotion); }, [settings.reducedMotion]);
 

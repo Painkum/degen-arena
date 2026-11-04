@@ -1,5 +1,6 @@
 import { usePlayer, type Quality } from '../store/playerStore';
 import { sound } from '../audio/sound';
+import { useCustomTrack, useSongFile, removeSongFile } from '../audio/customTrack';
 
 function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -17,12 +18,45 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
   );
 }
 
+function Soundtrack() {
+  const { name, error } = useCustomTrack();
+  return (
+    <div className="py-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-white/80">Soundtrack</span>
+        <div className="flex items-center gap-2">
+          <label className="cursor-pointer rounded-md border border-white/20 px-2.5 py-1 font-display text-[10px] tracking-widest text-white/80 hover:border-neon-purple">
+            {name ? 'CHANGE' : 'USE MY SONG'}
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) useSongFile(f); e.target.value = ''; }}
+            />
+          </label>
+          {name && (
+            <button className="rounded-md border border-white/20 px-2.5 py-1 font-display text-[10px] tracking-widest text-white/60 hover:border-rose-400" onClick={() => removeSongFile()}>
+              BUILT-IN
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="mt-0.5 truncate text-[11px] text-white/45">
+        {name ? <>Playing your file: <span className="text-neon-green">{name}</span></> : 'Built-in track: Degen Rush'}
+      </div>
+      {error && <div className="text-[11px] text-rose-300">{error}</div>}
+      <div className="text-[10px] text-white/30">Your file plays from this device only. It isn't uploaded.</div>
+    </div>
+  );
+}
+
 export function Settings({ compact = false }: { compact?: boolean }) {
   const s = usePlayer((x) => x.settings);
   const set = usePlayer((x) => x.setSettings);
   return (
     <div className={compact ? '' : 'space-y-1'}>
       <Toggle label="Music" on={s.music} onChange={(v) => set({ music: v })} />
+      <Soundtrack />
       <Toggle label="Sound effects" on={s.sfx} onChange={(v) => set({ sfx: v })} />
       <Toggle label="Reduced motion" on={s.reducedMotion} onChange={(v) => set({ reducedMotion: v })} />
       <div className="flex items-center justify-between gap-4 py-1.5">

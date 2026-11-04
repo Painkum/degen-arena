@@ -4,3 +4,10 @@ dist
 .env.local
 *.tsbuildinfo
 .claude/
+
+# Personal music files: keep copyrighted songs out of the public repo
+*.mp3
+*.m4a
+*.wav
+*.ogg
+*.flac

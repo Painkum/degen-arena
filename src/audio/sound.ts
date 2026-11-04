@@ -13,6 +13,10 @@ class SoundEngine {
   private step = 0;
   private nextTime = 0;
   private intensity = 0; // 0 = menu, 1 = in-game
+  // Optional player-supplied soundtrack (a local file; never uploaded).
+  private customEl: HTMLAudioElement | null = null;
+  private customNode: MediaElementAudioSourceNode | null = null;
+  private customUrl: string | null = null;
 
   private ensure() {
     if (this.ctx) return this.ctx;
@@ -45,6 +49,34 @@ class SoundEngine {
       this.musicGain.gain.setTargetAtTime(on ? 0.24 : 0, this.ctx.currentTime, 0.1);
     }
     if (on && this.ctx) this.startMusic();
+    if (!on) this.customEl?.pause();
+  }
+
+  /** Use a song file from the player's device instead of the built-in track. Pass null to go back. */
+  setCustomTrack(file: Blob | null) {
+    this.customEl?.pause();
+    this.customNode?.disconnect();
+    if (this.customUrl) URL.revokeObjectURL(this.customUrl);
+    this.customEl = null;
+    this.customNode = null;
+    this.customUrl = null;
+    if (file) {
+      this.customUrl = URL.createObjectURL(file);
+      const el = new Audio(this.customUrl);
+      el.loop = true;
+      this.customEl = el;
+    }
+    this.stopScheduler();
+    if (this.ctx && this.musicOn) this.startMusic();
+  }
+
+  get hasCustomTrack() { return this.customEl !== null; }
+
+  private stopScheduler() {
+    if (this.musicTimer !== null) {
+      clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
   }
   setSfx(on: boolean) {
     this.sfxOn = on;
@@ -54,7 +86,20 @@ class SoundEngine {
 
   private startMusic() {
     const ctx = this.ctx;
-    if (!ctx || this.musicTimer !== null) return;
+    if (!ctx) return;
+    if (this.customEl) {
+      // Finished songs are already mastered loud, so they get their own level.
+      // The Music toggle pauses the element (see setMusic).
+      if (!this.customNode) {
+        this.customNode = ctx.createMediaElementSource(this.customEl);
+        const level = ctx.createGain();
+        level.gain.value = 0.55;
+        this.customNode.connect(level).connect(this.master);
+      }
+      this.customEl.play().catch(() => {}); // needs a user gesture; unlock() retries
+      return;
+    }
+    if (this.musicTimer !== null) return;
     this.nextTime = ctx.currentTime + 0.1;
     this.musicTimer = window.setInterval(() => this.schedule(), 50);
   }
